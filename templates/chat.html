@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="flex flex-col h-screen bg-gray-900 text-white">
+        <div class="p-4 border-b border-gray-700 text-lg font-bold">
+            Chat Room: {{ room_name }}
+        </div>
+    
+        <div id="chatContainer" class="flex-1 overflow-y-auto px-4 py-2 space-y-2 bg-gray-800">
+            {% for message in messages %}
+                <div class="flex {% if message.sender.user.username == user %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="{% if message.sender.user.username == user %}
+                                bg-blue-500 text-white 
+                             {% else %}
+                                bg-gray-700 text-white 
+                             {% endif %} 
+                             px-4 py-2 rounded-2xl max-w-xs break-words shadow-md relative">
+                        <p>{{ message.message }}</p>
+                        {% if message.sender.user.username != user %}
+                            <span class="text-sm text-gray-300 font-medium block mt-1">-{{ message.sender.user.username }}</span>
+                        {% endif %}
+                        <button class="absolute top-1 right-1 text-gray-300 hover:text-red-500 like-button">
+                            
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    
+        <form method="post" action="" class="flex items-center p-4 border-t border-gray-700">
+            {% csrf_token %}
+            <textarea id="message-input" name="message" rows="1"
+                class="flex-1 resize-none p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none"
+                placeholder="Type your message here..."></textarea>
+            <button id="send-button" type="button"
+                class="ml-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                Send
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const chatContainer = document.getElementById('chatContainer');
+            const username = '{{ user }}';
+    
+            const websocketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+            const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/${encodeURIComponent('{{ room_name }}')}/`;
+            const socket = new WebSocket(wsEndpoint);
+    
+            socket.onopen = () => console.log("WebSocket connection opened!");
+            socket.onclose = () => console.log("WebSocket connection closed!");
+    
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+    
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('flex');
+                messageDiv.classList.add(data.sender !== username ? 'justify-start' : 'justify-end');
+    
+                const bubble = document.createElement('div');
+                bubble.classList.add('px-4', 'py-2', 'rounded-2xl', 'max-w-xs', 'break-words', 'shadow-md', 'relative');
+                if (data.sender !== username) {
+                    bubble.classList.add('bg-gray-700', 'text-white');
+                } else {
+                    bubble.classList.add('bg-blue-500', 'text-white');
+                }
+    
+                bubble.innerHTML = `<p>${data.message}</p>` + 
+                    (data.sender !== username ? `<span class="text-sm text-gray-300 font-medium block mt-1">-${data.sender}</span>` : '') +
+                    `<button class="absolute top-1 right-1 text-gray-300 hover:text-red-500 like-button">❤️</button>`;
+    
+                messageDiv.appendChild(bubble);
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            };
+    
+            sendButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                const message = messageInput.value.trim();
+                if (message) {
+                    socket.send(JSON.stringify({ 'message': message, 'sender': username }));
+                    messageInput.value = '';
+                }
+            });
+    
+            chatContainer.addEventListener('click', function (event) {
+                if (event.target.classList.contains('like-button')) {
+                    const messageElement = event.target.closest('.rounded-2xl');
+                    console.log('Liked message:', messageElement.querySelector('p').textContent);
+                    
+                }
+            });
+        });
+    </script>
+   
+</body>
+</html>
