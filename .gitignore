@@ -42,4 +42,4 @@ htmlcov/
 chat/__pycache__/
 chat/migrations/*
 static/image
-.json
+*.json
