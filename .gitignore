@@ -19,8 +19,8 @@ db.sqlite3
 *.pyd
 # Virtual environment
 venv/
-env/
-.env/
+.venv/
+
 # PyCharm project files
 .idea/
 
@@ -37,3 +37,9 @@ htmlcov/
 *.gcda
 *.gcno
 *.gcov" > .gitignore
+
+
+chat/__pycache__/
+chat/migrations/*
+static/image
+.json
