@@ -7,6 +7,9 @@
 
 This is a real-time chat application built with Django, Django Channels, WebSockets, and PostgreSQL. The application allows users to join chat rooms, send real-time messages, and interact with other users.
 
+
+![Project Image](images/Screenshot%202025-04-10%20235603.png)
+
 ---
 
 ## Features
@@ -38,7 +41,6 @@ Before setting up the project, ensure you have the following installed:
 git clone <repository-url>
 cd chat_appliction
 ```
-
 
 **Windows**
 
